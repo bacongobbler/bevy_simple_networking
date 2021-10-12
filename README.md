@@ -12,7 +12,7 @@ Currently, this plugin provides:
   immediately)
 - full connection life cycle management
 
-By default, idle connections are dropped after 3 seconds, but this can be
+By default, idle connections are dropped after 1 second, but this can be
 configured by changing the value of a `NetworkResource`'s `idle_timeout`
 parameter.
 

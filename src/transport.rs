@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, net::SocketAddr};
 
-use super::{message::Message, urgency::Urgency};
+use super::message::Message;
 
 /// Resource serving as the owner of the queue of messages to be sent. This resource also serves
 /// as the interface for other systems to send messages.
@@ -67,25 +67,9 @@ impl Transport {
     }
 
     /// Creates a `Message` with the default guarantees provided by the `Socket` implementation and
-    /// pushes it onto the messages queue to be sent on next sim tick.
+    /// pushes it onto the messages queue to be sent on the next frame.
     pub fn send(&mut self, destination: SocketAddr, payload: &[u8]) {
-        self.send_with_requirements(destination, payload, Urgency::OnTick);
-    }
-
-    /// Creates a `Message` with the default guarantees provided by the `Socket` implementation and
-    /// Pushes it onto the messages queue to be sent immediately.
-    pub fn send_immediate(&mut self, destination: SocketAddr, payload: &[u8]) {
-        self.send_with_requirements(destination, payload, Urgency::Immediate);
-    }
-
-    /// Creates and enqueues a `Message` with the specified guarantee.
-    pub fn send_with_requirements(
-        &mut self,
-        destination: SocketAddr,
-        payload: &[u8],
-        timing: Urgency,
-    ) {
-        let message = Message::new(destination, payload, timing);
+        let message = Message::new(destination, payload);
         self.messages.push_back(message);
     }
 
@@ -101,19 +85,13 @@ impl Transport {
         &self.messages
     }
 
-    /// Returns the messages to send by returning the immediate messages or anything adhering to
-    /// the given filter.
+    /// Drains the messages queue and returns the drained messages. The filter allows you to drain
+    /// only messages that adhere to your filter. This might be useful in a scenario like draining
+    /// messages with a particular urgency requirement.
     pub fn drain_messages_to_send(
         &mut self,
         mut filter: impl FnMut(&mut Message) -> bool,
     ) -> Vec<Message> {
-        self.drain_messages(|message| message.urgency == Urgency::Immediate || filter(message))
-    }
-
-    /// Drains the messages queue and returns the drained messages. The filter allows you to drain
-    /// only messages that adhere to your filter. This might be useful in a scenario like draining
-    /// messages with a particular urgency requirement.
-    pub fn drain_messages(&mut self, mut filter: impl FnMut(&mut Message) -> bool) -> Vec<Message> {
         let mut drained = Vec::with_capacity(self.messages.len());
         let mut i = 0;
         while i != self.messages.len() {
@@ -145,7 +123,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_send_with_default_requirements() {
+    fn test_send() {
         let mut transport = create_test_transport();
 
         transport.send("127.0.0.1:3000".parse().unwrap(), test_payload());
@@ -153,92 +131,49 @@ mod tests {
         let packet = &transport.messages[0];
 
         assert_eq!(transport.messages.len(), 1);
-        assert_eq!(packet.urgency, Urgency::OnTick);
-    }
-
-    #[test]
-    fn test_send_immediate_message() {
-        let mut transport = create_test_transport();
-
-        transport.send_immediate("127.0.0.1:3000".parse().unwrap(), test_payload());
-
-        let packet = &transport.messages[0];
-
-        assert_eq!(transport.messages.len(), 1);
-        assert_eq!(packet.urgency, Urgency::Immediate);
+        assert_eq!(packet.payload, test_payload());
     }
 
     #[test]
     fn test_has_messages() {
         let mut transport = create_test_transport();
         assert_eq!(transport.has_messages(), false);
-        transport.send_immediate("127.0.0.1:3000".parse().unwrap(), test_payload());
+        transport.send("127.0.0.1:3000".parse().unwrap(), test_payload());
         assert_eq!(transport.has_messages(), true);
     }
 
     #[test]
-    fn test_drain_only_immediate_messages() {
+    fn test_drain_only_heartbeat_messages() {
         let mut transport = create_test_transport();
 
         let addr = "127.0.0.1:3000".parse().unwrap();
-        transport.send_immediate(addr, test_payload());
-        transport.send_immediate(addr, test_payload());
         transport.send(addr, test_payload());
+        transport.send(addr, heartbeat_payload());
         transport.send(addr, test_payload());
-        transport.send_immediate(addr, test_payload());
-
-        assert_eq!(transport.drain_messages_to_send(|_| false).len(), 3);
-        assert_eq!(transport.drain_messages_to_send(|_| false).len(), 0);
-    }
-
-    #[test]
-    fn test_drain_only_messages_with_specific_requirements() {
-        let mut transport = create_test_transport();
-
-        let addr = "127.0.0.1:3000".parse().unwrap();
-        transport.send_with_requirements(addr, test_payload(), Urgency::OnTick);
-        transport.send_with_requirements(addr, test_payload(), Urgency::Immediate);
-        transport.send_with_requirements(addr, test_payload(), Urgency::OnTick);
-        transport.send_with_requirements(addr, test_payload(), Urgency::Immediate);
-        transport.send_with_requirements(addr, test_payload(), Urgency::OnTick);
+        transport.send(addr, heartbeat_payload());
+        transport.send(addr, test_payload());
 
         assert_eq!(
             transport
-                .drain_messages(|message| message.urgency == Urgency::Immediate)
+                .drain_messages_to_send(|m| m.payload == heartbeat_payload())
                 .len(),
             2
         );
         // validate removal
         assert_eq!(
             transport
-                .drain_messages(|message| message.urgency == Urgency::Immediate)
+                .drain_messages_to_send(|m| m.payload == heartbeat_payload())
                 .len(),
             0
         );
-        assert_eq!(
-            transport
-                .drain_messages(|message| message.urgency == Urgency::OnTick)
-                .len(),
-            3
-        );
+        assert_eq!(transport.drain_messages_to_send(|_| false).len(), 0);
+        assert_eq!(transport.drain_messages_to_send(|_| true).len(), 3);
+        // validate removal
+        assert_eq!(transport.drain_messages_to_send(|_| true).len(), 0);
     }
 
-    #[test]
-    fn test_send_with_requirements() {
-        let mut transport = create_test_transport();
-        let addr = "127.0.0.1:3000".parse().unwrap();
-
-        let urgency = [Urgency::OnTick, Urgency::OnTick];
-
-        for urg in urgency.iter().copied() {
-            transport.send_with_requirements(addr, test_payload(), urg);
-        }
-
-        assert_eq!(transport.messages.len(), urgency.len());
-
-        for (i, urg) in urgency.iter().enumerate() {
-            assert_eq!(transport.messages[i].urgency, *urg);
-        }
+    fn heartbeat_payload() -> &'static [u8] {
+        b""
     }
 
     fn test_payload() -> &'static [u8] {

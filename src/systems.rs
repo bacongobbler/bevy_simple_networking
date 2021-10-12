@@ -1,4 +1,7 @@
-use std::{io, net::{SocketAddr, UdpSocket}};
+use std::{
+    io,
+    net::{SocketAddr, UdpSocket},
+};
 
 use bevy::prelude::*;
 use bytes::Bytes;
@@ -7,10 +10,7 @@ use crate::HeartbeatTimer;
 
 use super::{events::NetworkEvent, transport::Transport, NetworkResource};
 
-pub fn client_recv_packet_system(
-    socket: Res<UdpSocket>,
-    mut events: EventWriter<NetworkEvent>,
-) {
+pub fn client_recv_packet_system(socket: Res<UdpSocket>, mut events: EventWriter<NetworkEvent>) {
     loop {
         let mut buf = [0; 32];
         match socket.recv_from(&mut buf) {
@@ -47,9 +47,9 @@ pub fn server_recv_packet_system(
             Ok((recv_len, address)) => {
                 let payload = Bytes::copy_from_slice(&buf[..recv_len]);
                 if net
-                .connections
-                .insert(address, time.time_since_startup())
-                .is_none()
+                    .connections
+                    .insert(address, time.time_since_startup())
+                    .is_none()
                 {
                     // connection established
                     events.send(NetworkEvent::Connected(address));

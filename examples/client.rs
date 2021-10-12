@@ -28,18 +28,18 @@ fn connection_handler(mut events: EventReader<NetworkEvent>) {
         match event {
             NetworkEvent::Message(_, msg) => {
                 info!("server sent a message: {:?}", msg);
-            },
+            }
             NetworkEvent::SendError(err, msg) => {
                 error!(
                     "NetworkEvent::SendError (payload [{:?}]): {:?}",
                     msg.payload, err
                 );
-            },
+            }
             NetworkEvent::RecvError(err) => {
                 error!("NetworkEvent::RecvError: {:?}", err);
-            },
+            }
             // discard irrelevant events
-            _ => {},
+            _ => {}
         }
     }
 }

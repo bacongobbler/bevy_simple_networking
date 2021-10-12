@@ -2,7 +2,6 @@ mod events;
 mod message;
 mod systems;
 mod transport;
-mod urgency;
 
 use std::collections::HashMap;
 use std::net::SocketAddr;

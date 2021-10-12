@@ -1,0 +1,17 @@
+[package]
+name = "bevy_simple_networking"
+description = "Simple authoritative server networking library for Bevy"
+authors = ["Matthew Fisher <matt.fisher@fishworks.io>"]
+repository = "https://github.com/bacongobbler/bevy_simple_networking"
+readme = "README.md"
+keywords = ["bevy", "gamedev"]
+version = "0.1.0"
+edition = "2018"
+license = "Apache-2.0"
+license-file = "LICENSE"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bevy = "0.5"
+bytes = "1"

@@ -17,7 +17,27 @@ pub fn network_time_system(time: Res<Time>, mut net_time: ResMut<NetworkTime>) {
     }
 }
 
-pub fn network_recv_system(
+pub fn client_recv_packet_system(socket: Res<UdpSocket>, mut events: EventWriter<NetworkEvent>) {
+    loop {
+        let mut buf = [0; 32];
+        match socket.recv_from(&mut buf) {
+            Ok((recv_len, address)) => {
+                let payload = Bytes::copy_from_slice(&buf[..recv_len]);
+                debug!("sending payload {:?}", payload);
+                events.send(NetworkEvent::Message(address, payload));
+            }
+            Err(e) => {
+                if e.kind() != io::ErrorKind::WouldBlock {
+                    events.send(NetworkEvent::RecvError(e));
+                }
+                // break loop when no messages are left to read this frame
+                break;
+            }
+        }
+    }
+}
+
+pub fn server_recv_packet_system(
     time: Res<Time>,
     net_time: Res<NetworkTime>,
     socket: Res<UdpSocket>,
@@ -43,9 +63,8 @@ pub fn network_recv_system(
                         // discard without sending a NetworkEvent
                         continue;
                     }
-                    let event = NetworkEvent::Message(address, payload);
-                    debug!("frame {}: sending event {:?}", frame, buf);
-                    events.send(event);
+                    debug!("frame {}: sending payload {:?}", frame, payload);
+                    events.send(NetworkEvent::Message(address, payload));
                 }
                 Err(e) => {
                     if e.kind() != io::ErrorKind::WouldBlock {

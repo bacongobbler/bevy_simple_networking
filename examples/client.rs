@@ -1,7 +1,7 @@
 use std::net::{SocketAddr, UdpSocket};
 
 use bevy::prelude::*;
-use bevy_simple_networking::{auto_heartbeat_system, NetworkingPlugin};
+use bevy_simple_networking::ClientPlugin;
 
 fn main() {
     let remote_addr: SocketAddr = "127.0.0.1:4567".parse().expect("could not parse addr");
@@ -17,7 +17,6 @@ fn main() {
         .insert_resource(remote_addr)
         .insert_resource(socket)
         .add_plugins(MinimalPlugins)
-        .add_plugin(NetworkingPlugin)
-        .add_system(auto_heartbeat_system.system())
+        .add_plugin(ClientPlugin)
         .run();
 }

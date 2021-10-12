@@ -31,17 +31,31 @@ impl Default for NetworkResource {
     }
 }
 
-pub struct NetworkingPlugin;
+pub struct ServerPlugin;
 
-impl Plugin for NetworkingPlugin {
+impl Plugin for ServerPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.insert_resource(NetworkResource::default())
             .insert_resource(time::NetworkTime::default())
             .insert_resource(transport::Transport::new())
             .add_event::<events::NetworkEvent>()
             .add_system(systems::network_time_system.system())
-            .add_system(systems::network_recv_system.system())
+            .add_system(systems::server_recv_packet_system.system())
             .add_system(systems::network_send_system.system())
             .add_system(systems::idle_timeout_system.system());
+    }
+}
+
+pub struct ClientPlugin;
+
+impl Plugin for ClientPlugin {
+    fn build(&self, app: &mut AppBuilder) {
+        app.insert_resource(time::NetworkTime::default())
+            .insert_resource(transport::Transport::new())
+            .add_event::<events::NetworkEvent>()
+            .add_system(systems::network_time_system.system())
+            .add_system(systems::client_recv_packet_system.system())
+            .add_system(systems::network_send_system.system())
+            .add_system(systems::auto_heartbeat_system.system());
     }
 }

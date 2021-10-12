@@ -1,7 +1,7 @@
 use std::{net::UdpSocket, time::Duration};
 
 use bevy::prelude::*;
-use bevy_simple_networking::{NetworkEvent, NetworkingPlugin};
+use bevy_simple_networking::{NetworkEvent, ServerPlugin};
 
 const LISTEN_ADDRESS: &str = "127.0.0.1:4567";
 
@@ -22,7 +22,7 @@ fn main() {
     App::build()
         .insert_resource(socket)
         .add_plugins(MinimalPlugins)
-        .add_plugin(NetworkingPlugin)
+        .add_plugin(ServerPlugin)
         .add_system(connection_handler.system())
         .run();
 }

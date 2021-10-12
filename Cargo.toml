@@ -5,7 +5,7 @@ authors = ["Matthew Fisher <matt.fisher@fishworks.io>"]
 repository = "https://github.com/bacongobbler/bevy_simple_networking"
 readme = "README.md"
 keywords = ["bevy", "gamedev"]
-version = "0.1.1"
+version = "0.1.2"
 edition = "2018"
 license = "Apache-2.0"
 

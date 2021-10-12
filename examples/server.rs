@@ -1,7 +1,7 @@
 use std::{net::UdpSocket, time::Duration};
 
-use bevy::prelude::*;
-use bevy_simple_networking::{NetworkEvent, ServerPlugin};
+use bevy::{app::ScheduleRunnerSettings, log::LogPlugin, prelude::*};
+use bevy_simple_networking::{NetworkEvent, ServerPlugin, Transport};
 
 const LISTEN_ADDRESS: &str = "127.0.0.1:4567";
 
@@ -11,46 +11,49 @@ fn main() {
         .set_nonblocking(true)
         .expect("could not set socket to be nonblocking");
     socket
-        .set_broadcast(true)
-        .expect("could not set SO_BROADCAST");
-    socket
         .set_read_timeout(Some(Duration::from_secs(5)))
         .expect("could not set read timeout");
 
-    println!("Server now listening on {}", LISTEN_ADDRESS);
+    info!("Server now listening on {}", LISTEN_ADDRESS);
 
     App::build()
+        // run the server at a reduced tick rate (100 ticks per minute)
+        .insert_resource(ScheduleRunnerSettings::run_loop(Duration::from_secs_f32(
+            60. / 100.,
+        )))
         .insert_resource(socket)
         .add_plugins(MinimalPlugins)
+        .add_plugin(LogPlugin)
         .add_plugin(ServerPlugin)
         .add_system(connection_handler.system())
         .run();
 }
 
-pub fn connection_handler(mut events: EventReader<NetworkEvent>) {
+fn connection_handler(mut events: EventReader<NetworkEvent>, mut transport: ResMut<Transport>) {
     for event in events.iter() {
         match event {
             NetworkEvent::Connected(handle) => {
-                println!("{}: connected!", handle);
+                info!("{}: connected!", handle);
+                transport.send(*handle, b"PONG");
             }
             NetworkEvent::Disconnected(handle) => {
-                println!("{}: disconnected!", handle);
+                info!("{}: disconnected!", handle);
             }
             NetworkEvent::Message(handle, msg) => {
-                println!("{} sent a message: {:?}", handle, msg);
+                info!("{} sent a message: {:?}", handle, msg);
             }
             NetworkEvent::SendError(err, msg) => {
-                println!(
+                info!(
                     "NetworkEvent::SendError (payload [{:?}]): {:?}",
                     msg.payload, err
                 );
             }
             NetworkEvent::RecvError(err) => {
-                println!("NetworkEvent::RecvError: {:?}", err);
+                info!("NetworkEvent::RecvError: {:?}", err);
             }
             NetworkEvent::ConnectionError(err, handle) => match handle {
-                Some(h) => println!("NetworkEvent::ConnectionError from {}: {:?}", h, err),
-                _ => println!("NetworkEvent::ConnectionError: {:?}", err),
+                Some(h) => info!("NetworkEvent::ConnectionError from {}: {:?}", h, err),
+                _ => info!("NetworkEvent::ConnectionError: {:?}", err),
             },
         }
     }

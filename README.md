@@ -2,7 +2,6 @@
 
 ![version](https://img.shields.io/crates/v/bevy_simple_networking)
 ![downloads](https://img.shields.io/crates/d/bevy_simple_networking)
-![license](https://img.shields.io/crates/l/bevy_simple_networking)
 
 This is a simple networking plugin for the Bevy game engine. This plugin
 provides the building blocks which game developers can use to develop online

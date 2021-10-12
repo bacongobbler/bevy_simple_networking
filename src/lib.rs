@@ -16,6 +16,9 @@ use bevy::prelude::*;
 /// Defines how many times a client automatically sends a heartbeat packet.
 /// This should be no more than half of idle_timeout.
 const DEFAULT_HEARTBEAT_TICK_RATE_SECS: f32 = 2.;
+/// Defines how long the server will wait until it sends
+/// NetworkEvent::Disconnected
+const DEFAULT_IDLE_TIMEOUT_SECS: f32 = 5.;
 
 pub struct NetworkResource {
     // Hashmap of each live connection and their last known packet activity
@@ -27,7 +30,7 @@ impl Default for NetworkResource {
     fn default() -> Self {
         Self {
             connections: Default::default(),
-            idle_timeout: Duration::from_secs(5),
+            idle_timeout: Duration::from_secs_f32(DEFAULT_IDLE_TIMEOUT_SECS),
         }
     }
 }

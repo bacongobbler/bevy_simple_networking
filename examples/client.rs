@@ -38,10 +38,6 @@ fn connection_handler(mut events: EventReader<NetworkEvent>) {
             NetworkEvent::RecvError(err) => {
                 error!("NetworkEvent::RecvError: {:?}", err);
             },
-            NetworkEvent::ConnectionError(err, handle) => match handle {
-                Some(h) => error!("NetworkEvent::ConnectionError from {}: {:?}", h, err),
-                _ => error!("NetworkEvent::ConnectionError: {:?}", err),
-            },
             // discard irrelevant events
             _ => {},
         }

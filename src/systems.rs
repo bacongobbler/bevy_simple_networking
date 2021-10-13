@@ -12,7 +12,7 @@ use super::{events::NetworkEvent, transport::Transport, NetworkResource};
 
 pub fn client_recv_packet_system(socket: Res<UdpSocket>, mut events: EventWriter<NetworkEvent>) {
     loop {
-        let mut buf = [0; 32];
+        let mut buf = [0; 512];
         match socket.recv_from(&mut buf) {
             Ok((recv_len, address)) => {
                 let payload = Bytes::copy_from_slice(&buf[..recv_len]);
@@ -42,7 +42,7 @@ pub fn server_recv_packet_system(
     mut net: ResMut<NetworkResource>,
 ) {
     loop {
-        let mut buf = [0; 32];
+        let mut buf = [0; 512];
         match socket.recv_from(&mut buf) {
             Ok((recv_len, address)) => {
                 let payload = Bytes::copy_from_slice(&buf[..recv_len]);

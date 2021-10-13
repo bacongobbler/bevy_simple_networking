@@ -43,13 +43,13 @@ fn connection_handler(mut events: EventReader<NetworkEvent>, mut transport: ResM
                 info!("{} sent a message: {:?}", handle, msg);
             }
             NetworkEvent::SendError(err, msg) => {
-                info!(
+                error!(
                     "NetworkEvent::SendError (payload [{:?}]): {:?}",
                     msg.payload, err
                 );
             }
             NetworkEvent::RecvError(err) => {
-                info!("NetworkEvent::RecvError: {:?}", err);
+                error!("NetworkEvent::RecvError: {:?}", err);
             }
         }
     }

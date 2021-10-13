@@ -47,13 +47,13 @@ fn connection_handler(
                 }
             }
             NetworkEvent::SendError(err, msg) => {
-                info!(
+                error!(
                     "NetworkEvent::SendError (payload [{:?}]): {:?}",
                     msg.payload, err
                 );
             }
             NetworkEvent::RecvError(err) => {
-                info!("NetworkEvent::RecvError: {:?}", err);
+                error!("NetworkEvent::RecvError: {:?}", err);
             }
             _ => {}
         }

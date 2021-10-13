@@ -17,9 +17,9 @@ fn main() {
     info!("Server now listening on {}", LISTEN_ADDRESS);
 
     App::build()
-        // run the server at a reduced tick rate (100 ticks per minute)
+        // run the server at a reduced tick rate (35 ticks per second)
         .insert_resource(ScheduleRunnerSettings::run_loop(Duration::from_secs_f32(
-            60. / 100.,
+            1. / 35.,
         )))
         .insert_resource(socket)
         .add_plugins(MinimalPlugins)
@@ -46,6 +46,14 @@ fn connection_handler(
                     transport.send(*addr, format!("{} has left the chat", handle).as_bytes());
                 }
             }
+            NetworkEvent::Message(handle, msg) => {
+                for (addr, _) in net.connections.iter() {
+                    transport.send(
+                        *addr,
+                        format!("{}: {}", handle, String::from_utf8_lossy(msg)).as_bytes(),
+                    );
+                }
+            }
             NetworkEvent::SendError(err, msg) => {
                 error!(
                     "NetworkEvent::SendError (payload [{:?}]): {:?}",
@@ -55,7 +63,6 @@ fn connection_handler(
             NetworkEvent::RecvError(err) => {
                 error!("NetworkEvent::RecvError: {:?}", err);
             }
-            _ => {}
         }
     }
 }

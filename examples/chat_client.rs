@@ -1,7 +1,7 @@
 use std::net::{SocketAddr, UdpSocket};
 
 use bevy::{log::LogPlugin, prelude::*};
-use bevy_simple_networking::{ClientPlugin, NetworkEvent};
+use bevy_simple_networking::{ClientPlugin, NetworkEvent, Transport};
 
 fn main() {
     let remote_addr: SocketAddr = "127.0.0.1:4567".parse().expect("could not parse addr");
@@ -20,6 +20,7 @@ fn main() {
         .add_plugin(LogPlugin)
         .add_plugin(ClientPlugin)
         .add_system(connection_handler.system())
+        .add_startup_system(hello_world.system())
         .run();
 }
 
@@ -27,7 +28,7 @@ fn connection_handler(mut events: EventReader<NetworkEvent>) {
     for event in events.iter() {
         match event {
             NetworkEvent::Message(_, msg) => {
-                info!("{:?}", msg);
+                info!("{}", String::from_utf8_lossy(msg));
             }
             NetworkEvent::SendError(err, msg) => {
                 error!(
@@ -42,4 +43,8 @@ fn connection_handler(mut events: EventReader<NetworkEvent>) {
             _ => {}
         }
     }
+}
+
+fn hello_world(remote_addr: Res<SocketAddr>, mut transport: ResMut<Transport>) {
+    transport.send(*remote_addr, b"Hello world!");
 }

@@ -34,6 +34,25 @@ impl Default for NetworkResource {
     }
 }
 
+/// Label for network related systems.
+#[derive(Clone, Hash, Debug, PartialEq, Eq, SystemLabel)]
+pub enum NetworkSystem {
+    Receive,
+    Send,
+}
+
+/// Label for server specific systems.
+#[derive(Clone, Hash, Debug, PartialEq, Eq, SystemLabel)]
+pub enum ServerSystem {
+    IdleTimeout,
+}
+
+/// Label for client specific systems.
+#[derive(Clone, Hash, Debug, PartialEq, Eq, SystemLabel)]
+pub enum ClientSystem {
+    Heartbeat,
+}
+
 pub struct ServerPlugin;
 
 impl Plugin for ServerPlugin {
@@ -41,9 +60,21 @@ impl Plugin for ServerPlugin {
         app.insert_resource(NetworkResource::default())
             .insert_resource(transport::Transport::new())
             .add_event::<events::NetworkEvent>()
-            .add_system(systems::server_recv_packet_system.system())
-            .add_system(systems::send_packet_system.system())
-            .add_system(systems::idle_timeout_system.system());
+            .add_system(
+                systems::server_recv_packet_system
+                    .system()
+                    .label(NetworkSystem::Receive),
+            )
+            .add_system(
+                systems::send_packet_system
+                    .system()
+                    .label(NetworkSystem::Send),
+            )
+            .add_system(
+                systems::idle_timeout_system
+                    .system()
+                    .label(ServerSystem::IdleTimeout),
+            );
     }
 }
 
@@ -59,8 +90,20 @@ impl Plugin for ClientPlugin {
                 true,
             )))
             .add_event::<events::NetworkEvent>()
-            .add_system(systems::client_recv_packet_system.system())
-            .add_system(systems::send_packet_system.system())
-            .add_system(systems::auto_heartbeat_system.system());
+            .add_system(
+                systems::client_recv_packet_system
+                    .system()
+                    .label(NetworkSystem::Receive),
+            )
+            .add_system(
+                systems::send_packet_system
+                    .system()
+                    .label(NetworkSystem::Send),
+            )
+            .add_system(
+                systems::auto_heartbeat_system
+                    .system()
+                    .label(ClientSystem::Heartbeat),
+            );
     }
 }

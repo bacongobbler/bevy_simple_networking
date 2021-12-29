@@ -37,13 +37,13 @@ impl Default for NetworkResource {
 pub struct ServerPlugin;
 
 impl Plugin for ServerPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.insert_resource(NetworkResource::default())
             .insert_resource(transport::Transport::new())
             .add_event::<events::NetworkEvent>()
-            .add_system(systems::server_recv_packet_system.system())
-            .add_system(systems::send_packet_system.system())
-            .add_system(systems::idle_timeout_system.system());
+            .add_system(systems::server_recv_packet_system)
+            .add_system(systems::send_packet_system)
+            .add_system(systems::idle_timeout_system);
     }
 }
 
@@ -52,15 +52,15 @@ pub struct HeartbeatTimer(Timer);
 pub struct ClientPlugin;
 
 impl Plugin for ClientPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.insert_resource(transport::Transport::new())
             .insert_resource(HeartbeatTimer(Timer::from_seconds(
                 DEFAULT_HEARTBEAT_TICK_RATE_SECS,
                 true,
             )))
             .add_event::<events::NetworkEvent>()
-            .add_system(systems::client_recv_packet_system.system())
-            .add_system(systems::send_packet_system.system())
-            .add_system(systems::auto_heartbeat_system.system());
+            .add_system(systems::client_recv_packet_system)
+            .add_system(systems::send_packet_system)
+            .add_system(systems::auto_heartbeat_system);
     }
 }

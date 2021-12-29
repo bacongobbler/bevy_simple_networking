@@ -13,13 +13,13 @@ fn main() {
         .set_nonblocking(true)
         .expect("could not set socket to be nonblocking");
 
-    App::build()
+    App::new()
         .insert_resource(remote_addr)
         .insert_resource(socket)
         .add_plugins(MinimalPlugins)
         .add_plugin(LogPlugin)
         .add_plugin(ClientPlugin)
-        .add_system(connection_handler.system())
+        .add_system(connection_handler)
         .run();
 }
 

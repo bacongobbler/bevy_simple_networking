@@ -16,7 +16,7 @@ fn main() {
 
     info!("Server now listening on {}", LISTEN_ADDRESS);
 
-    App::build()
+    App::new()
         // run the server at a reduced tick rate (35 ticks per second)
         .insert_resource(ScheduleRunnerSettings::run_loop(Duration::from_secs_f32(
             1. / 35.,
@@ -25,7 +25,7 @@ fn main() {
         .add_plugins(MinimalPlugins)
         .add_plugin(LogPlugin)
         .add_plugin(ServerPlugin)
-        .add_system(connection_handler.system())
+        .add_system(connection_handler)
         .run();
 }
 

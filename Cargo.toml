@@ -6,11 +6,11 @@ repository = "https://github.com/bacongobbler/bevy_simple_networking"
 readme = "README.md"
 keywords = ["bevy", "gamedev"]
 version = "0.2.0"
-edition = "2018"
+edition = "2021"
 license = "Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.5"
+bevy = { git = "https://github.com/bevyengine/bevy", branch = "main" }
 bytes = "1"

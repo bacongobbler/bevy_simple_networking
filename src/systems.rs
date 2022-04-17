@@ -1,28 +1,51 @@
+use std::borrow::Borrow;
 use std::{
     io,
+    io::{ Error, ErrorKind},
     net::{SocketAddr, UdpSocket},
 };
 
 use bevy::prelude::*;
+
 use bytes::Bytes;
 
-use crate::HeartbeatTimer;
+use bytes::Buf;
+
+use super::HeartbeatTimer;
 
 use super::{events::NetworkEvent, transport::Transport, NetworkResource};
+
+// Uses for unpacking payload. Accoring to the first byte returns NetworkEvent enum.
+fn uncover(address: SocketAddr, mut payload: Bytes) -> NetworkEvent {
+    if payload.len() < 1 {
+        return NetworkEvent::RecvError(Error::new(ErrorKind::Other, "leng is not satisfied message type"));
+    }
+    //println!("payload: {:?}", payload);
+    let key = payload.split_to(1).get_i8();
+
+    match key {
+        109 => NetworkEvent::CliEvent(address, payload), // Eq to "m" or "main" / soon in tables file.
+        105 => NetworkEvent::GetId(address, payload),
+        _ => {
+            let err_msg = format!( "unknown message type: {}", key);
+            NetworkEvent::RecvError(Error::new(ErrorKind::Other, err_msg))
+        }
+    }
+}
 
 pub fn client_recv_packet_system(socket: Res<UdpSocket>, mut events: EventWriter<NetworkEvent>) {
     loop {
         let mut buf = [0; 512];
         match socket.recv_from(&mut buf) {
             Ok((recv_len, address)) => {
-                let payload = Bytes::copy_from_slice(&buf[..recv_len]);
+                let mut payload = Bytes::copy_from_slice(&buf[..recv_len]);
                 if payload.len() == 0 {
                     debug!("{}: received heartbeat packet", address);
                     // discard without sending a NetworkEvent
                     continue;
                 }
                 debug!("received payload {:?} from {}", payload, address);
-                events.send(NetworkEvent::Message(address, payload));
+                events.send(uncover(address, payload));
             }
             Err(e) => {
                 if e.kind() != io::ErrorKind::WouldBlock {
@@ -45,7 +68,7 @@ pub fn server_recv_packet_system(
         let mut buf = [0; 512];
         match socket.recv_from(&mut buf) {
             Ok((recv_len, address)) => {
-                let payload = Bytes::copy_from_slice(&buf[..recv_len]);
+                let mut payload = Bytes::copy_from_slice(&buf[..recv_len]);
                 if net
                     .connections
                     .insert(address, time.time_since_startup())
@@ -58,9 +81,13 @@ pub fn server_recv_packet_system(
                     debug!("{}: received heartbeat packet", address);
                     // discard without sending a NetworkEvent
                     continue;
+                } else {
+                
+                //println!("received payload {:?} from {}", payload, address);
+                //println!("payloaaaaad: {:?}", String::from_utf8_lossy(payload));
+                events.send(uncover(address, payload))
                 }
-                debug!("received payload {:?} from {}", payload, address);
-                events.send(NetworkEvent::Message(address, payload));
+                //println!("sliced: {:?}", payload.split_off(1));
             }
             Err(e) => {
                 if e.kind() != io::ErrorKind::WouldBlock {
@@ -108,6 +135,6 @@ pub fn auto_heartbeat_system(
     mut transport: ResMut<Transport>,
 ) {
     if timer.0.tick(time.delta()).just_finished() {
-        transport.send(*remote_addr, Default::default());
+        transport.send("heartbeat", *remote_addr, Default::default());
     }
 }

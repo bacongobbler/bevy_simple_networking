@@ -1,7 +1,9 @@
 use std::{collections::VecDeque, net::SocketAddr};
 
-use super::message::Message;
+use super::message::{Message};
 
+use crate::info;
+use bytes::Bytes;
 /// Resource serving as the owner of the queue of messages to be sent. This resource also serves
 /// as the interface for other systems to send messages.
 pub struct Transport {
@@ -19,8 +21,20 @@ impl Transport {
 
     /// Creates a `Message` with the default guarantees provided by the `Socket` implementation and
     /// pushes it onto the messages queue to be sent on the next frame.
-    pub fn send(&mut self, destination: SocketAddr, payload: &[u8]) {
-        let message = Message::new(destination, payload);
+    pub fn send(&mut self, message_type: &str, destination: SocketAddr, payload: &str) {
+        let buf: String;
+        match message_type{
+            "main" => {
+                buf = format!("{}{}", "m", payload);
+            }
+            "id" => {
+                buf = format!("{}{}", "i", payload);
+            }
+            _ => { buf = format!("{}", payload); } // nothing passed
+
+        }
+        //info!("payload: {}", payload);
+        let message = Message::new(destination, buf.as_bytes());
         self.messages.push_back(message);
     }
 
@@ -65,7 +79,7 @@ impl Default for Transport {
         }
     }
 }
-
+/*
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -74,7 +88,7 @@ mod tests {
     fn test_send() {
         let mut transport = create_test_transport();
 
-        transport.send("127.0.0.1:3000".parse().unwrap(), test_payload());
+        transport.send("test","127.0.0.1:3000".parse().unwrap(), test_payload());
 
         let packet = &transport.messages[0];
 
@@ -86,7 +100,7 @@ mod tests {
     fn test_has_messages() {
         let mut transport = create_test_transport();
         assert_eq!(transport.has_messages(), false);
-        transport.send("127.0.0.1:3000".parse().unwrap(), test_payload());
+        transport.send("test","127.0.0.1:3000".parse().unwrap(), test_payload());
         assert_eq!(transport.has_messages(), true);
     }
 
@@ -95,11 +109,11 @@ mod tests {
         let mut transport = create_test_transport();
 
         let addr = "127.0.0.1:3000".parse().unwrap();
-        transport.send(addr, test_payload());
-        transport.send(addr, heartbeat_payload());
-        transport.send(addr, test_payload());
-        transport.send(addr, heartbeat_payload());
-        transport.send(addr, test_payload());
+        transport.send("test",addr, test_payload());
+        transport.send("test",addr, heartbeat_payload());
+        transport.send("test",addr, test_payload());
+        transport.send("test",addr, heartbeat_payload());
+        transport.send("test",addr, test_payload());
 
         assert_eq!(
             transport
@@ -132,3 +146,4 @@ mod tests {
         Transport::new()
     }
 }
+*/

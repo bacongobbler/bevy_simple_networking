@@ -5,7 +5,7 @@ use bevy_simple_networking::{ClientPlugin, NetworkEvent};
 
 fn main() {
     let remote_addr: SocketAddr = "127.0.0.1:4567".parse().expect("could not parse addr");
-    let socket = UdpSocket::bind("[::]:0").expect("could not bind socket");
+    let socket = UdpSocket::bind("127.0.0.1:3400").expect("could not bind socket");
     socket
         .connect(remote_addr)
         .expect("could not connect to server");

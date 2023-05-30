@@ -5,10 +5,7 @@ use bevy_simple_networking::{ClientPlugin, NetworkEvent, SocketAddrResource, Udp
 
 fn main() {
     let remote_addr: SocketAddr = "127.0.0.1:4567".parse().expect("could not parse addr");
-    let socket = UdpSocket::bind("[::]:0").expect("could not bind socket");
-    socket
-        .connect(remote_addr)
-        .expect("could not connect to server");
+    let socket = UdpSocket::bind("0.0.0.0:0").expect("could not bind socket");
     socket
         .set_nonblocking(true)
         .expect("could not set socket to be nonblocking");

@@ -1,7 +1,9 @@
 use std::{net::UdpSocket, time::Duration};
 
 use bevy::{app::ScheduleRunnerSettings, log::LogPlugin, prelude::*};
-use bevy_simple_networking::{NetworkEvent, NetworkResource, ServerPlugin, Transport};
+use bevy_simple_networking::{
+    NetworkEvent, NetworkResource, ServerPlugin, Transport, UdpSocketResource,
+};
 
 const LISTEN_ADDRESS: &str = "127.0.0.1:4567";
 
@@ -21,9 +23,9 @@ fn main() {
         .insert_resource(ScheduleRunnerSettings::run_loop(Duration::from_secs_f32(
             1. / 35.,
         )))
-        .insert_resource(socket)
+        .insert_resource(UdpSocketResource::new(socket))
         .add_plugins(MinimalPlugins)
-        .add_plugin(LogPlugin)
+        .add_plugin(LogPlugin::default())
         .add_plugin(ServerPlugin)
         .add_system(connection_handler)
         .run();

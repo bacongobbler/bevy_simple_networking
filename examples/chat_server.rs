@@ -1,7 +1,7 @@
 use std::{net::UdpSocket, time::Duration};
 
-use bevy::{app::ScheduleRunnerSettings, log::LogPlugin, prelude::*};
-use bevy_simple_networking::{NetworkEvent, NetworkResource, ServerPlugin, Transport};
+use bevy::{app::{App, ScheduleRunnerPlugin, Update}, log::{info, LogPlugin}, prelude::*, MinimalPlugins};
+use bevy_simple_networking::{NetworkEvent, NetworkResource, ServerPlugin, Transport, UdpSocketResource};
 
 const LISTEN_ADDRESS: &str = "127.0.0.1:4567";
 
@@ -17,15 +17,12 @@ fn main() {
     info!("Server now listening on {}", LISTEN_ADDRESS);
 
     App::new()
+    .insert_resource(UdpSocketResource::new(socket))
         // run the server at a reduced tick rate (35 ticks per second)
-        .insert_resource(ScheduleRunnerSettings::run_loop(Duration::from_secs_f32(
+        .add_plugins((MinimalPlugins, LogPlugin::default(), ServerPlugin, ScheduleRunnerPlugin::run_loop(Duration::from_secs_f32(
             1. / 35.,
-        )))
-        .insert_resource(socket)
-        .add_plugins(MinimalPlugins)
-        .add_plugin(LogPlugin)
-        .add_plugin(ServerPlugin)
-        .add_system(connection_handler)
+        ))))
+        .add_systems(Update, connection_handler)
         .run();
 }
 
@@ -34,7 +31,7 @@ fn connection_handler(
     mut events: EventReader<NetworkEvent>,
     mut transport: ResMut<Transport>,
 ) {
-    for event in events.iter() {
+    for event in events.read() {
         match event {
             NetworkEvent::Connected(handle) => {
                 for (addr, _) in net.connections.iter() {

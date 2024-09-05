@@ -1,7 +1,7 @@
 use std::net::{SocketAddr, UdpSocket};
 
 use bevy::{log::LogPlugin, prelude::*};
-use bevy_simple_networking::{ClientPlugin, NetworkEvent, Transport};
+use bevy_simple_networking::{ClientPlugin, NetworkEvent, SocketAddrResource, Transport, UdpSocketResource};
 
 fn main() {
     let remote_addr: SocketAddr = "127.0.0.1:4567".parse().expect("could not parse addr");
@@ -14,18 +14,16 @@ fn main() {
         .expect("could not set socket to be nonblocking");
 
     App::new()
-        .insert_resource(remote_addr)
-        .insert_resource(socket)
-        .add_plugins(MinimalPlugins)
-        .add_plugin(LogPlugin)
-        .add_plugin(ClientPlugin)
-        .add_system(connection_handler)
-        .add_startup_system(hello_world)
+        .insert_resource(SocketAddrResource::new(remote_addr))
+        .insert_resource(UdpSocketResource::new(socket))
+        .add_plugins((MinimalPlugins, LogPlugin::default(), ClientPlugin))
+        .add_systems(Update, connection_handler)
+        .add_systems(Startup, hello_world)
         .run();
 }
 
 fn connection_handler(mut events: EventReader<NetworkEvent>) {
-    for event in events.iter() {
+    for event in events.read() {
         match event {
             NetworkEvent::Message(_, msg) => {
                 info!("{}", String::from_utf8_lossy(msg));
@@ -45,6 +43,6 @@ fn connection_handler(mut events: EventReader<NetworkEvent>) {
     }
 }
 
-fn hello_world(remote_addr: Res<SocketAddr>, mut transport: ResMut<Transport>) {
-    transport.send(*remote_addr, b"Hello world!");
+fn hello_world(remote_addr: Res<SocketAddrResource>, mut transport: ResMut<Transport>) {
+    transport.send(**remote_addr, b"Hello world!");
 }

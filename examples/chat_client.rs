@@ -1,7 +1,9 @@
 use std::net::{SocketAddr, UdpSocket};
 
 use bevy::{log::LogPlugin, prelude::*};
-use bevy_simple_networking::{ClientPlugin, NetworkEvent, SocketAddrResource, Transport, UdpSocketResource};
+use bevy_simple_networking::{
+    ClientPlugin, NetworkEvent, SocketAddrResource, Transport, UdpSocketResource,
+};
 
 fn main() {
     let remote_addr: SocketAddr = "127.0.0.1:4567".parse().expect("could not parse addr");

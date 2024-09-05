@@ -1,6 +1,7 @@
 use std::{
     io,
-    net::{SocketAddr, UdpSocket}, ops::Deref,
+    net::{SocketAddr, UdpSocket},
+    ops::Deref,
 };
 
 use bevy::prelude::*;
@@ -44,7 +45,10 @@ impl SocketAddrResource {
     }
 }
 
-pub fn client_recv_packet_system(socket: Res<UdpSocketResource>, mut events: EventWriter<NetworkEvent>) {
+pub fn client_recv_packet_system(
+    socket: Res<UdpSocketResource>,
+    mut events: EventWriter<NetworkEvent>,
+) {
     loop {
         let mut buf = [0; 512];
         match socket.recv_from(&mut buf) {
@@ -80,11 +84,7 @@ pub fn server_recv_packet_system(
         match socket.recv_from(&mut buf) {
             Ok((recv_len, address)) => {
                 let payload = Bytes::copy_from_slice(&buf[..recv_len]);
-                if net
-                    .connections
-                    .insert(address, time.elapsed())
-                    .is_none()
-                {
+                if net.connections.insert(address, time.elapsed()).is_none() {
                     // connection established
                     events.send(NetworkEvent::Connected(address));
                 }

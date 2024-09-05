@@ -67,8 +67,8 @@ impl Plugin for ServerPlugin {
                 (
                     systems::server_recv_packet_system.in_set(NetworkSystem::Receive),
                     systems::send_packet_system.in_set(NetworkSystem::Send),
-                    systems::idle_timeout_system.in_set(ServerSystem::IdleTimeout)
-                )
+                    systems::idle_timeout_system.in_set(ServerSystem::IdleTimeout),
+                ),
             );
     }
 }
@@ -91,8 +91,8 @@ impl Plugin for ClientPlugin {
                 (
                     systems::client_recv_packet_system.in_set(NetworkSystem::Receive),
                     systems::send_packet_system.in_set(NetworkSystem::Send),
-                    systems::auto_heartbeat_system.in_set(ClientSystem::Heartbeat)
-                )
+                    systems::auto_heartbeat_system.in_set(ClientSystem::Heartbeat),
+                ),
             );
     }
 }

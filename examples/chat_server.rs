@@ -18,10 +18,12 @@ fn main() {
 
     App::new()
     .insert_resource(UdpSocketResource::new(socket))
-        // run the server at a reduced tick rate (35 ticks per second)
-        .add_plugins((MinimalPlugins, LogPlugin::default(), ServerPlugin, ScheduleRunnerPlugin::run_loop(Duration::from_secs_f32(
-            1. / 35.,
-        ))))
+    .add_plugins((
+            // run the server at a reduced tick rate (35 ticks per second)
+            MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(Duration::from_secs_f32(1. / 35.))),
+            LogPlugin::default(),
+            ServerPlugin,
+        ))
         .add_systems(Update, connection_handler)
         .run();
 }

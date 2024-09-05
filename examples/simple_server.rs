@@ -17,11 +17,13 @@ fn main() {
     info!("Server now listening on {}", LISTEN_ADDRESS);
 
     App::new()
-        // run the server at a reduced tick rate (100 ticks per minute)
         .insert_resource(UdpSocketResource::new(socket))
-        .add_plugins((MinimalPlugins, LogPlugin::default(), ServerPlugin, ScheduleRunnerPlugin::run_loop(Duration::from_secs_f32(
-            60. / 100.,
-        ))))
+        .add_plugins((
+            // run the server at a reduced tick rate (100 ticks per minute)
+            MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(Duration::from_secs_f32(60. / 100.))),
+            LogPlugin::default(),
+            ServerPlugin
+        ))
         .add_systems(Update, connection_handler)
         .run();
 }
@@ -37,12 +39,12 @@ fn connection_handler(mut events: EventReader<NetworkEvent>, mut transport: ResM
                 info!("{}: disconnected!", handle);
             }
             NetworkEvent::Message(handle, msg) => {
-                info!("{} sent a message: {:?}", handle, msg);
+                info!("{} sent a message: {:?}", handle, String::from_utf8_lossy(msg));
             }
             NetworkEvent::SendError(err, msg) => {
                 error!(
                     "NetworkEvent::SendError (payload [{:?}]): {:?}",
-                    msg.payload, err
+                    String::from_utf8_lossy(&msg.payload), err
                 );
             }
             NetworkEvent::RecvError(err) => {

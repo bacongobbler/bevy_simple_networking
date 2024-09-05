@@ -25,12 +25,12 @@ fn connection_handler(mut events: EventReader<NetworkEvent>) {
     for event in events.read() {
         match event {
             NetworkEvent::Message(_, msg) => {
-                info!("server sent a message: {:?}", msg);
+                info!("server sent a message: {:?}", String::from_utf8_lossy(msg));
             }
             NetworkEvent::SendError(err, msg) => {
                 error!(
                     "NetworkEvent::SendError (payload [{:?}]): {:?}",
-                    msg.payload, err
+                    String::from_utf8_lossy(&msg.payload), err
                 );
             }
             NetworkEvent::RecvError(err) => {
